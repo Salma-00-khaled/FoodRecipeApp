@@ -3,7 +3,8 @@ import { View, FlatList, TouchableOpacity, Text, ActivityIndicator, Alert, Style
 import SearchBar from '../components/SearchBar';
 import CategoryItem from '../components/CategoryItem';
 import { fetchCategories } from '../api/recipeService';
-//import * as Animatable from 'react-native-animatable';
+import * as Animatable from 'react-native-animatable';
+import { Ionicons } from '@expo/vector-icons';
 
 
 const HomeScreen = ({ navigation }) => {
@@ -65,11 +66,18 @@ const HomeScreen = ({ navigation }) => {
         })}
         placeholder="Search recipes..."
       /> */}
-      
+    
       <Text style={styles.sectionTitle}>Categories</Text>
-      <Text style={styles.summaryText}>
-      Browse our collection of recipe categories. Tap any category to explore delicious recipes.
-    </Text>
+      <Animatable.View
+  animation="fadeInUp"
+  duration={800}
+  delay={200}
+  useNativeDriver
+>
+  <Text style={styles.summaryText}>
+    Browse our collection of recipe categories. Tap any category to explore delicious recipes.
+  </Text>
+</Animatable.View>
 
 
       
@@ -195,6 +203,20 @@ const styles = StyleSheet.create({
       shadowRadius: 3,
       elevation: 2,
     },
+    favoritesButton: {
+      flexDirection: 'row',
+      backgroundColor: '#ff8c00',
+      padding: 10,
+      borderRadius: 25,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+  },
+  favoritesButtonText: {
+      color: '#fff',
+      marginLeft: 8,
+      fontWeight: 'bold',
+  },
     listContainer: {
       paddingBottom: 20,
       gap: 12,
