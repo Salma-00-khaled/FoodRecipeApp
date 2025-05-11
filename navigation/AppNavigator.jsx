@@ -4,6 +4,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CategoryScreen from '../screens/CategoryScreen';
 import RecipeScreen from '../screens/RecipeScreen';
+import LikedRecipesScreen from '../screens/LikedRecipesScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,8 +29,13 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Recipe" 
         component={RecipeScreen} 
-        options={{ title: 'Recipe Details' }}
+        options={{ title: 'Recipe Details',  }}
       />
+      <Stack.Screen 
+    name="LikedRecipes" 
+    component={LikedRecipesScreen} 
+    options={{ headerShown: false }}
+/>
     </Stack.Navigator>
   );
 };
