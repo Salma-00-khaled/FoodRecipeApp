@@ -1,57 +1,54 @@
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import React, { useState, useEffect } from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// Import your screens
+// Screens
+import WelcomeScreen from './screens/WelcomeScreen';
 import HomeScreen from './screens/HomeScreen';
-import LikedRecipesScreen from './screens/LikedRecipesScreen';
 import CategoryScreen from './screens/CategoryScreen';
 import RecipeScreen from './screens/RecipeScreen';
-import WelcomeScreen from './screens/WelcomeScreen'; // Create this new component
+import SharedRecipeScreen from './screens/SharedRecipeScreen';
+import LikedRecipesScreen from './screens/LikedRecipesScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import AddRecipeScreen from './screens/AddRecipeScreen';
+import EditRecipeScreen from './screens/EditRecipeScreen';
 
-const Tab = createBottomTabNavigator();
+const RootStack = createStackNavigator();
 const HomeStack = createStackNavigator();
 const FavoritesStack = createStackNavigator();
-const RootStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
 function HomeStackScreen() {
   return (
-    <HomeStack.Navigator>
-      <HomeStack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ headerShown: false }} 
-      />
-      <HomeStack.Screen 
-        name="Category" 
-        component={CategoryScreen} 
-        options={{ headerShown: false }}
-      />
-      <HomeStack.Screen 
-        name="Recipe" 
-        component={RecipeScreen} 
-        options={{ headerShown: false }}
-      />
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeScreen" component={HomeScreen} />
+      <HomeStack.Screen name="Category" component={CategoryScreen} />
+      <HomeStack.Screen name="Recipe" component={RecipeScreen} />
+      <HomeStack.Screen name="SharedRecipe" component={SharedRecipeScreen} />
     </HomeStack.Navigator>
   );
 }
 
 function FavoritesStackScreen() {
   return (
-    <FavoritesStack.Navigator>
-      <FavoritesStack.Screen 
-        name="LikedRecipes" 
-        component={LikedRecipesScreen} 
-        options={{ headerShown: false }} 
-      />
-      <FavoritesStack.Screen 
-        name="Recipe" 
-        component={RecipeScreen} 
-        options={{ headerShown: false }}
-      />
+    <FavoritesStack.Navigator screenOptions={{ headerShown: false }}>
+      <FavoritesStack.Screen name="LikedRecipes" component={LikedRecipesScreen} />
+      <FavoritesStack.Screen name="Recipe" component={RecipeScreen} />
     </FavoritesStack.Navigator>
+  );
+}
+
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="Profile" component={ProfileScreen} />
+      <ProfileStack.Screen name="AddRecipe" component={AddRecipeScreen} />
+      <ProfileStack.Screen name="EditRecipe" component={EditRecipeScreen} />
+      <ProfileStack.Screen name="SharedRecipe" component={SharedRecipeScreen} />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -59,16 +56,23 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Favorites') {
-            iconName = focused ? 'heart' : 'heart-outline';
+          switch (route.name) {
+            case 'HomeTab':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'FavoritesTab':
+              iconName = focused ? 'heart' : 'heart-outline';
+              break;
+            case 'ProfileTab':
+              iconName = focused ? 'person' : 'person-outline';
+              break;
+            default:
+              iconName = 'ellipse';
           }
-
-          return <Icon name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#ff8c00',
         tabBarInactiveTintColor: 'gray',
@@ -78,46 +82,31 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeStackScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Tab.Screen 
-        name="Favorites" 
-        component={FavoritesStackScreen} 
-        options={{ headerShown: false }} 
-      />
+      <Tab.Screen name="HomeTab" component={HomeStackScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="FavoritesTab" component={FavoritesStackScreen} options={{ title: 'Favorites' }} />
+      <Tab.Screen name="ProfileTab" component={ProfileStackScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }
 
+// Main App
 export default function App() {
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowWelcome(false);
-    }, 3000); // Show welcome screen for 3 seconds
-
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <NavigationContainer>
-      <RootStack.Navigator>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {showWelcome ? (
-          <RootStack.Screen
-            name="Welcome"
-            component={WelcomeScreen}
-            options={{ headerShown: false }}
-          />
+          <RootStack.Screen name="Welcome" component={WelcomeScreen} />
         ) : (
-          <RootStack.Screen
-            name="Main"
-            component={MainTabs}
-            options={{ headerShown: false }}
-          />
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
         )}
       </RootStack.Navigator>
     </NavigationContainer>

@@ -47,10 +47,11 @@ const CategoryScreen = ({ route, navigation }) => {
     fetchRecipesData();
   }, [categoryName, searchQuery]);
 
-  const handleRecipePress = (recipe) => {
-    navigation.navigate('Recipe', { recipeId: recipe.idMeal });
-  };
-
+ const handleRecipePress = (recipe) => {
+  navigation.navigate('Recipe', { 
+    recipeId: recipe.idMeal,
+  });
+};
   const headerHeight = scrollY.interpolate({
     inputRange: [0, IMAGE_HEIGHT],
     outputRange: [HEADER_MAX_HEIGHT, HEADER_HEIGHT],

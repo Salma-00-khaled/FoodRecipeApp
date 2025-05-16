@@ -87,10 +87,11 @@ const HomeScreen = ({ navigation }) => {
         numColumns={2}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => 
-            navigation.navigate('Category', { 
-              categoryName: item.strCategory,
-              categoryThumb: item.strCategoryThumb
-            })
+          // In your HomeScreen component
+navigation.navigate('Category', { 
+  categoryName: item.strCategory,
+  categoryThumb: item.strCategoryThumb
+})
           }>
             <CategoryItem 
               category={{
