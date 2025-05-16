@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   View, 
   ScrollView, 
-  ImageBackground, 
   Text, 
   TouchableOpacity, 
   ActivityIndicator, 
   Linking, 
   StyleSheet,
   Alert,
-  Animated
+  Animated,
+  Share,
+  SafeAreaView
 } from 'react-native';
 import YouTube from 'react-native-youtube-iframe';
 import { Ionicons } from '@expo/vector-icons';
@@ -92,6 +93,29 @@ const RecipeScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const ingredientsList = Array.from({ length: 20 })
+        .map((_, i) => {
+          const ingredient = recipe[`strIngredient${i + 1}`];
+          const measure = recipe[`strMeasure${i + 1}`];
+          return ingredient && ingredient.trim() ? `• ${measure} ${ingredient}` : null;
+        })
+        .filter(Boolean)
+        .join('\n');
+
+      const message = `Check out this delicious ${recipe.strMeal} recipe!\n\nIngredients:\n${ingredientsList}\n\nInstructions: ${recipe.strInstructions}`;
+      const url = recipe.strYoutube || recipe.strSource || '';
+
+      await Share.share({
+        title: `Recipe: ${recipe.strMeal}`,
+        message: `${message}\n\n${url}`,
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share recipe');
+    }
+  };
+
   const extractYoutubeId = (url) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -117,7 +141,7 @@ const RecipeScreen = ({ route, navigation }) => {
           onPress={() => {
             setLoading(true);
             setError(null);
-            setTimeout(() => loadData(), 500);
+            loadData();
           }}
         >
           <Text style={styles.retryButtonText}>Try Again</Text>
@@ -143,7 +167,7 @@ const RecipeScreen = ({ route, navigation }) => {
   const youtubeId = extractYoutubeId(recipe.strYoutube);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Fixed Header with Image */}
       <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
         <Animated.Image
@@ -165,9 +189,17 @@ const RecipeScreen = ({ route, navigation }) => {
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
             
-            <Text style={styles.headerTitle} numberOfLines={1}>
-              {recipe.strMeal}
-            </Text>
+            <View style={styles.titleContainer}>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {recipe.strMeal}
+              </Text>
+              <TouchableOpacity 
+                style={styles.shareButton}
+                onPress={handleShare}
+              >
+                <Ionicons name="share-social" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
             
             <TouchableOpacity 
               style={styles.likeButton}
@@ -184,15 +216,15 @@ const RecipeScreen = ({ route, navigation }) => {
       </Animated.View>
 
       {/* Scrollable Content */}
-      <Animated.ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: 200 }]}
-        scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-      >
+     <Animated.ScrollView
+  style={styles.scrollView}
+  contentContainerStyle={[styles.content, { paddingTop: 200 }]}
+  scrollEventThrottle={16}
+  onScroll={Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: false }
+  )}
+>
         <Text style={styles.area}>{recipe.strArea} • {recipe.strCategory}</Text>
         
         <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -228,15 +260,15 @@ const RecipeScreen = ({ route, navigation }) => {
           </>
         )}
       </Animated.ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f1e3', // Organic cream background
+    backgroundColor: '#f7f1e3',
+   
   },
   loadingContainer: {
     flex: 1,
@@ -246,7 +278,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    color: '##ff8c00', // Calm green
+    color: '#ff8c00',
     fontSize: 16,
   },
   headerContainer: {
@@ -281,6 +313,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
+  titleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical:15,
+    paddingTop:15
+  },
   backButton: {
     padding: 8,
   },
@@ -289,10 +330,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'white',
     textAlign: 'center',
-    flex: 1,
     textShadowColor: 'rgba(0,0,0,0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+    marginRight: 8,
+     
+  },
+  shareButton: {
+    padding: 4,
   },
   likeButton: {
     padding: 8,
@@ -305,21 +350,18 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   area: {
-    fontSize: 16,
-    color: '#rgba(100, 51, 3, 0.86)',
+    fontSize: 24,
+    color: 'rgba(100, 51, 3, 0.86)',
     marginBottom: 10,
-    fontSize:24,
-    alignItems:'center',
-    justifyContent:'center'
-    
+    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     marginTop: 20,
-    color: '#rgba(204, 104, 4, 0.87)',
+    color: 'rgba(204, 104, 4, 0.87)',
     borderBottomWidth: 1,
-    borderColor: '#rgba(100, 51, 3, 0.86)',
+    borderColor: 'rgba(100, 51, 3, 0.86)',
     paddingBottom: 4,
   },
   ingredient: {
@@ -328,7 +370,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingLeft: 10,
     borderLeftWidth: 2,
-    borderLeftColor: '#rgba(184, 134, 84, 0.86)',
+    borderLeftColor: 'rgba(184, 134, 84, 0.86)',
   },
   instruction: {
     fontSize: 16,
@@ -338,7 +380,7 @@ const styles = StyleSheet.create({
   youtubeLink: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#rgba(139, 5, 5, 0.9)',
+    backgroundColor: 'rgba(139, 5, 5, 0.9)',
     borderRadius: 8,
     alignItems: 'center',
   },

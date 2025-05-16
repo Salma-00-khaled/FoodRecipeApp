@@ -214,6 +214,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fffaf5',
+     paddingHorizontal: 6,
+    paddingVertical:6
   },
   gradientBackground: {
     flex: 1,

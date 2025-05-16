@@ -1,35 +1,50 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+  Dimensions
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ReusablePopup from '../components/ReusablePopup';
+import NotificationSystem from '../components/NotificationSystem';
 
 const { width } = Dimensions.get('window');
 
-export default function ProfileScreen({ navigation }) {
+function ProfileScreen({ navigation }) {
   const [recipes, setRecipes] = useState([]);
   const [scrollY] = useState(new Animated.Value(0));
   const [showPopup, setShowPopup] = useState(false);
   const [popupConfig, setPopupConfig] = useState({});
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  
+  // Initialize notification system
+  const { NotificationIcon, NotificationModal, sendNotification } = NotificationSystem({ navigation });
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadRecipes);
     return unsubscribe;
   }, [navigation]);
 
-  const animateNavigation = (recipe) => {
-    setSelectedRecipe(recipe);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      navigation.navigate('SharedRecipe', { recipe });
-      fadeAnim.setValue(0);
-    });
+  const loadRecipes = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('myRecipes');
+      const data = stored ? JSON.parse(stored) : [];
+      setRecipes(data);
+    } catch (error) {
+      showAlertPopup(
+        'Error',
+        'Failed to load recipes. Please try again.',
+        'error'
+      );
+    }
   };
 
   const showAlertPopup = (title, message, type, primaryAction, secondaryAction = null) => {
@@ -51,18 +66,16 @@ export default function ProfileScreen({ navigation }) {
     setShowPopup(true);
   };
 
-  const loadRecipes = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('myRecipes');
-      const data = stored ? JSON.parse(stored) : [];
-      setRecipes(data);
-    } catch (error) {
-      showAlertPopup(
-        'Error',
-        'Failed to load recipes. Please try again.',
-        'error'
-      );
-    }
+  const animateNavigation = (recipe) => {
+    setSelectedRecipe(recipe);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      navigation.navigate('SharedRecipe', { recipe });
+      fadeAnim.setValue(0);
+    });
   };
 
   const deleteRecipe = async (id) => {
@@ -118,8 +131,13 @@ export default function ProfileScreen({ navigation }) {
           <Animated.View style={[styles.headerSubtitle, { opacity: headerOpacity }]}>
             <Text style={styles.headerSubtitleText}>{recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'} shared</Text>
           </Animated.View>
+          <View style={{left:160  , bottom:55}}>
+          <NotificationIcon />
+          </View>
         </LinearGradient>
       </Animated.View>
+
+      <NotificationModal />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -175,7 +193,7 @@ export default function ProfileScreen({ navigation }) {
                           colors={['#ffd8b8', '#ff8c00']}
                           style={styles.recipeImagePlaceholder}
                         >
-                          <Icon name="restaurant-outline" size={40} color="#fff" />
+                          <Ionicons name="restaurant-outline" size={40} color="#fff" />
                         </LinearGradient>
                       )}
                       <LinearGradient
@@ -194,7 +212,7 @@ export default function ProfileScreen({ navigation }) {
                               navigation.navigate('EditRecipe', { recipe: item }); 
                             }}
                           >
-                            <Icon name="create-outline" size={20} color="#ff8c00" />
+                            <Ionicons name="create-outline" size={20} color="#ff8c00" />
                           </TouchableOpacity>
                           <TouchableOpacity 
                             style={styles.actionButton} 
@@ -203,7 +221,7 @@ export default function ProfileScreen({ navigation }) {
                               deleteRecipe(item.id); 
                             }}
                           >
-                            <Icon name="trash-outline" size={20} color="#ff5252" />
+                            <Ionicons name="trash-outline" size={20} color="#ff5252" />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -215,7 +233,7 @@ export default function ProfileScreen({ navigation }) {
           ) : (
             <View style={styles.emptyState}>
               <View style={styles.emptyIllustration}>
-                <Icon name="restaurant-outline" size={80} color="#ffd8b8" />
+                <Ionicons name="restaurant-outline" size={80} color="#ffd8b8" />
               </View>
               <Text style={styles.emptyText}>Your recipe book is empty</Text>
               <Text style={styles.emptySubtext}>Start sharing your culinary masterpieces</Text>
@@ -229,7 +247,7 @@ export default function ProfileScreen({ navigation }) {
                   start={{ x: 0, y: 0 }} 
                   end={{ x: 1, y: 0 }}
                 >
-                  <Icon name="add" size={20} color="#fff" />
+                  <Ionicons name="add" size={20} color="#fff" />
                   <Text style={styles.emptyButtonText}>Create First Recipe</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -248,7 +266,7 @@ export default function ProfileScreen({ navigation }) {
           start={{ x: 0, y: 0 }} 
           end={{ x: 1, y: 0 }}
         >
-          <Icon name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color="#fff" />
         </LinearGradient>
       </TouchableOpacity>
 
@@ -441,3 +459,5 @@ const styles = StyleSheet.create({
     zIndex: 20 
   },
 });
+
+export default ProfileScreen;

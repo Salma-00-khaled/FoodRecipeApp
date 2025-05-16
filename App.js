@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import * as Notifications from 'expo-notifications';
 // Screens
 import WelcomeScreen from './screens/WelcomeScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -14,6 +14,8 @@ import LikedRecipesScreen from './screens/LikedRecipesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AddRecipeScreen from './screens/AddRecipeScreen';
 import EditRecipeScreen from './screens/EditRecipeScreen';
+import  notificationHandler, { configureNotifications, showLocalNotification, scheduleNotification, scheduleWelcomeNotification, setupNotificationChannel } from './services/notificationService';
+import { Platform } from 'react-native';
 
 const RootStack = createStackNavigator();
 const HomeStack = createStackNavigator();
@@ -92,6 +94,37 @@ function MainTabs() {
 // Main App
 export default function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+   useEffect(() => {
+    // Handle notification taps
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const { screen, ...params } = response.notification.request.content.data;
+      if (screen) {
+        navigation.navigate(screen, params);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+   useEffect(() => {
+    // Setup notifications
+    const setupNotifications = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('You need to enable notifications to get the full experience');
+        return;
+      }
+
+      await setupNotificationChannel();
+      
+      if (!showWelcome) {
+        await scheduleWelcomeNotification();
+      }
+    };
+
+    setupNotifications();
+  }, [showWelcome]);
+ 
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -99,6 +132,25 @@ export default function App() {
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+// Configure for Android
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: true,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF8C00',
+  });
+}
 
   return (
     <NavigationContainer>

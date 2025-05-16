@@ -7,6 +7,10 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ReusablePopup from '../components/ReusablePopup';
 
+import * as Notifications from 'expo-notifications';
+import NotificationSystem from '../components/NotificationSystem';
+
+
 const { width } = Dimensions.get('window');
 
 export default function AddRecipeScreen({ navigation }) {
@@ -48,6 +52,8 @@ export default function AddRecipeScreen({ navigation }) {
     setShowPopup(true);
   };
 
+  const { sendNotification } = NotificationSystem({ navigation });
+
   const handleSubmit = async () => {
     if (!title || !ingredients || !steps) {
       showAlertPopup(
@@ -75,11 +81,21 @@ export default function AddRecipeScreen({ navigation }) {
       const updated = [...parsed, newRecipe];
       await AsyncStorage.setItem('myRecipes', JSON.stringify(updated));
       
+      // Send notification when recipe is shared
+      await sendNotification(
+        "Recipe Shared!",
+        `You've successfully shared "${title}"`,
+        { 
+          screen: 'Profile',
+          recipeId: newRecipe.id 
+        }
+      );
+
       showAlertPopup(
         'Success', 
         'Your recipe has been saved successfully!',
         'success',
-        () => navigation.goBack()
+        () => navigation.navigate('Profile')
       );
     } catch (err) {
       console.error(err);
@@ -90,6 +106,7 @@ export default function AddRecipeScreen({ navigation }) {
       );
     }
   };
+
 
   return (
     <View style={styles.container}>

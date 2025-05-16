@@ -3,6 +3,19 @@
     "name": "FoodRecipeApp",
     "slug": "FoodRecipeApp",
     "version": "1.0.0",
+     "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon-white.png",
+          "color": "#FF8C00",
+          "androidMode": "collapse",
+          "androidCollapsedTitle": "{notificationTitle}",
+          "androidColor": "#FF8C00",
+          "iosDisplayInForeground": true
+        }
+      ]
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
