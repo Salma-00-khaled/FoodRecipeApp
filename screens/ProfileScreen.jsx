@@ -25,7 +25,6 @@ function ProfileScreen({ navigation }) {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   
-  // Initialize notification system
   const { NotificationIcon, NotificationModal, sendNotification } = NotificationSystem({ navigation });
 
   useEffect(() => {
@@ -131,8 +130,8 @@ function ProfileScreen({ navigation }) {
           <Animated.View style={[styles.headerSubtitle, { opacity: headerOpacity }]}>
             <Text style={styles.headerSubtitleText}>{recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'} shared</Text>
           </Animated.View>
-          <View style={{left:160  , bottom:55}}>
-          <NotificationIcon />
+          <View style={{left:160, bottom:55}}>
+            <NotificationIcon />
           </View>
         </LinearGradient>
       </Animated.View>
@@ -256,17 +255,19 @@ function ProfileScreen({ navigation }) {
         </View>
       </ScrollView>
 
+      {/* Floating Add Recipe Button */}
       <TouchableOpacity 
         style={styles.floatingButton} 
         onPress={() => navigation.navigate('AddRecipe')}
+        activeOpacity={0.8}
       >
         <LinearGradient 
-          colors={['#ffd8b8', '#ff8c00']} 
-          style={styles.gradientButton} 
-          start={{ x: 0, y: 0 }} 
+          colors={['#ff8c00', '#ff6b00']} 
+          style={styles.floatingButtonGradient}
+          start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={28} color="#fff" />
         </LinearGradient>
       </TouchableOpacity>
 
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: { 
     paddingTop: 180, 
-    paddingBottom: 30 
+    paddingBottom: 100 
   },
   contentContainer: { 
     paddingBottom: 20 
@@ -444,20 +445,27 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     marginLeft: 8 
   },
-  floatingButton: { 
-    position: 'absolute', 
-    bottom: 30, 
-    right: 30, 
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    shadowColor: '#ff8c00', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.3, 
-    shadowRadius: 8, 
-    elevation: 8, 
-    zIndex: 20 
+  floatingButton: {
+    position: 'absolute',
+    bottom: 90,
+    right: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 20
   },
+  floatingButtonGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
 });
 
 export default ProfileScreen;

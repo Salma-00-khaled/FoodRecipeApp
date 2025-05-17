@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  StyleSheet, 
+  ScrollView, 
+  Image, 
+  TouchableOpacity, 
+  Dimensions,
+  Platform
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ReusablePopup from '../components/ReusablePopup';
-
-import * as Notifications from 'expo-notifications';
 import NotificationSystem from '../components/NotificationSystem';
-
 
 const { width } = Dimensions.get('window');
 
@@ -23,14 +30,29 @@ export default function AddRecipeScreen({ navigation }) {
   const [showPopup, setShowPopup] = useState(false);
   const [popupConfig, setPopupConfig] = useState({});
 
+  const { sendNotification } = NotificationSystem({ navigation });
+
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showAlertPopup(
+        'Permission Required',
+        'Sorry, we need camera roll permissions to select an image.',
+        'error'
+      );
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
-    if (!result.canceled) setImage(result.assets[0].uri);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
   };
 
   const showAlertPopup = (title, message, type, primaryAction, secondaryAction = null) => {
@@ -52,9 +74,7 @@ export default function AddRecipeScreen({ navigation }) {
     setShowPopup(true);
   };
 
-  const { sendNotification } = NotificationSystem({ navigation });
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (addMore = false) => {
     if (!title || !ingredients || !steps) {
       showAlertPopup(
         'Required Fields', 
@@ -81,7 +101,6 @@ export default function AddRecipeScreen({ navigation }) {
       const updated = [...parsed, newRecipe];
       await AsyncStorage.setItem('myRecipes', JSON.stringify(updated));
       
-      // Send notification when recipe is shared
       await sendNotification(
         "Recipe Shared!",
         `You've successfully shared "${title}"`,
@@ -95,7 +114,19 @@ export default function AddRecipeScreen({ navigation }) {
         'Success', 
         'Your recipe has been saved successfully!',
         'success',
-        () => navigation.navigate('Profile')
+        () => {
+          if (addMore) {
+            // Reset form for new recipe
+            setTitle('');
+            setDescription('');
+            setIngredients('');
+            setSteps('');
+            setImage(null);
+            setCategory('Uncategorized');
+          } else {
+            navigation.navigate('Profile');
+          }
+        }
       );
     } catch (err) {
       console.error(err);
@@ -106,7 +137,6 @@ export default function AddRecipeScreen({ navigation }) {
       );
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -119,15 +149,16 @@ export default function AddRecipeScreen({ navigation }) {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Icon name="arrow-back" size={24} color="#ff8c00" />
+            <Ionicons name="arrow-back" size={24} color="#ff8c00" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Recipe</Text>
           <View style={{ width: 24 }} />
         </View>
 
         <ScrollView 
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <TouchableOpacity 
             style={styles.imageUpload} 
@@ -148,7 +179,7 @@ export default function AddRecipeScreen({ navigation }) {
                 end={{ x: 1, y: 1 }}
               >
                 <View style={styles.uploadIconContainer}>
-                  <Icon name="camera" size={32} color="#ff8c00" />
+                  <Ionicons name="camera" size={32} color="#ff8c00" />
                   <Text style={styles.uploadText}>Add Photo</Text>
                 </View>
               </LinearGradient>
@@ -166,6 +197,7 @@ export default function AddRecipeScreen({ navigation }) {
               placeholderTextColor="#999"
               value={title}
               onChangeText={setTitle}
+              returnKeyType="next"
             />
           </View>
 
@@ -223,21 +255,25 @@ export default function AddRecipeScreen({ navigation }) {
             </View>
           </View>
 
-          <TouchableOpacity 
-            style={styles.submitButton} 
-            onPress={handleSubmit}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#ff8c00', '#ff6b00']}
-              style={styles.gradientButton}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.saveButton]} 
+              onPress={() => handleSubmit()}
+              activeOpacity={0.9}
             >
-              <Icon name="send" size={20} color="#fff" style={styles.submitIcon} />
-              <Text style={styles.submitButtonText}>Share Recipe</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={['#ff8c00', '#ff6b00']}
+                style={styles.gradientButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="send" size={20} color="#fff" style={styles.submitIcon} />
+                <Text style={styles.submitButtonText}>Share Recipe</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+    
+          </View>
         </ScrollView>
       </LinearGradient>
 
@@ -263,12 +299,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 40,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
     backgroundColor: 'transparent',
   },
   backButton: {
     padding: 5,
-    borderRadius: 20,
+    borderRadius: 14,
     backgroundColor: 'rgba(255, 140, 0, 0.1)',
   },
   headerTitle: {
@@ -282,7 +318,7 @@ const styles = StyleSheet.create({
   },
   imageUpload: {
     marginBottom: 25,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
     elevation: 3,
     shadowColor: '#000',
@@ -334,7 +370,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ffe0b2',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     fontSize: 16,
     color: '#333',
@@ -346,12 +382,11 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     textAlignVertical: 'top',
-    height: 80,
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ffe0b2',
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
     backgroundColor: '#fff',
     elevation: 1,
@@ -360,68 +395,34 @@ const styles = StyleSheet.create({
     height: 50,
     color: '#333',
   },
-  submitButton: {
-    borderRadius: 12,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  actionButton: {
+    borderRadius: 14,
     overflow: 'hidden',
-    marginTop: 10,
     elevation: 3,
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  saveButton: {
+    backgroundColor: '#ff8c00',
   },
   gradientButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 18,
+    padding: 16,
   },
   submitButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 18,
-    marginLeft: 10,
+    fontSize: 16,
+    marginLeft: 8,
   },
   submitIcon: {
     marginRight: 5,
-  },
-   imageUpload: {
-    marginBottom: 25,
-    borderRadius: 14, // Increased from 12
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ffe0b2',
-    borderRadius: 14, // Increased from 12
-    padding: 16,
-    fontSize: 16,
-    color: '#333',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ffe0b2',
-    borderRadius: 14, // Increased from 12
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    elevation: 1,
-  },
-  submitButton: {
-    borderRadius: 14, // Increased from 12
-    overflow: 'hidden',
-    marginTop: 10,
-    elevation: 3,
-  },
-  backButton: {
-    padding: 5,
-    borderRadius: 14, // Increased from 12
-    backgroundColor: 'rgba(255, 140, 0, 0.1)',
   },
 });

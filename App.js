@@ -16,6 +16,7 @@ import AddRecipeScreen from './screens/AddRecipeScreen';
 import EditRecipeScreen from './screens/EditRecipeScreen';
 import  notificationHandler, { configureNotifications, showLocalNotification, scheduleNotification, scheduleWelcomeNotification, setupNotificationChannel } from './services/notificationService';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RootStack = createStackNavigator();
 const HomeStack = createStackNavigator();
@@ -55,10 +56,55 @@ function ProfileStackScreen() {
 }
 
 function MainTabs() {
+   const insets = useSafeAreaInsets();
+
+  // Calculate tab bar height including safe area insets
+  const tabBarHeight = Platform.select({
+    ios: 60 + (insets.bottom > 0 ? insets.bottom / 2 : 10),
+    android: 60 + (insets.bottom > 0 ? insets.bottom : 0)
+  });
+
+  const tabBarStyle = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 30,
+    height: tabBarHeight,
+    paddingTop: 8,
+    paddingBottom: Platform.select({
+      ios: insets.bottom > 0 ? insets.bottom / 2 : 10,
+      android: insets.bottom > 0 ? insets.bottom : 10
+    }),
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.9)',
+      android: '#ffffff'
+    }),
+    borderTopWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    ...Platform.select({
+      ios: {
+        backdropFilter: 'blur(10px)',
+      },
+    }),
+  };
+
+  // Add padding to screen content to avoid being hidden by tab bar
+  const screenOptions = {
+    headerShown: false,
+    contentStyle: {
+      paddingBottom: tabBarHeight, // This ensures content isn't hidden
+    },
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
+        ...screenOptions,
+        tabBarHideOnKeyboard: true,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           switch (route.name) {
@@ -78,15 +124,27 @@ function MainTabs() {
         },
         tabBarActiveTintColor: '#ff8c00',
         tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          paddingBottom: 5,
-          height: 60,
+        tabBarStyle,
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeStackScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="FavoritesTab" component={FavoritesStackScreen} options={{ title: 'Favorites' }} />
-      <Tab.Screen name="ProfileTab" component={ProfileStackScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen 
+        name="HomeTab" 
+        component={HomeStackScreen} 
+        options={{ title: 'Home' }} 
+      />
+      <Tab.Screen 
+        name="FavoritesTab" 
+        component={LikedRecipesScreen} 
+        options={{ title: 'Favorites' }} 
+      />
+      <Tab.Screen 
+        name="ProfileTab" 
+        component={ProfileStackScreen} 
+        options={{ title: 'Profile' }} 
+      />
     </Tab.Navigator>
   );
 }
