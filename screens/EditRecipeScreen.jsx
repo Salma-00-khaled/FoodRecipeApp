@@ -101,10 +101,11 @@ export default function EditRecipeScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+         <ScrollView 
+                 contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
+                 showsVerticalScrollIndicator={false}
+                 keyboardShouldPersistTaps="handled"
+               >
           <TouchableOpacity 
             style={styles.imageUpload} 
             onPress={pickImage}
